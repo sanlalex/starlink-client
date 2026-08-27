@@ -92,8 +92,8 @@ class ServiceLine(BaseModel):
     depositType: Optional[str] = None
     conversionDate: Optional[
         str] = None  # Si fuera fecha se puede cambiar a datetime
-    nickname: str
-    displayName: str
+    nickname: Optional[str] = None
+    displayName: Optional[str] = None
     serviceAddress: ServiceAddress
     userTerminals: List[UserTerminal]
     gateways: List[Any]

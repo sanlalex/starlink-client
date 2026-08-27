@@ -21,7 +21,7 @@ class Account(BaseModel):
     isSupportAgent: bool
     isSpacexEmployee: bool
     enabled: bool
-    canManageClients: bool
+    canManageClients: bool = False
     roles: List[int]
     employeeAccountPermissions: List[str]
     permissions: List[Permission]

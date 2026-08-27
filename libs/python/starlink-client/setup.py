@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="starlink-client",
-    version="0.1.14.post1",
+    version="0.1.14.post2",
     # Buscamos paquetes namespace en "starlink_client*" y "spacex*"
     packages=find_namespace_packages(
         include=["starlink_client*", "spacex*"]

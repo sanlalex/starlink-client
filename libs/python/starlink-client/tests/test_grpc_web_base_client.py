@@ -4,6 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from spacex.api.device.device_pb2 import Request, Response
+from starlink_client.account import Account
+from starlink_client.dto import ServiceAddress, ServiceLine, Subscription
 from starlink_client.grpc_web_base_client import GrpcWebBaseClient
 
 
@@ -126,6 +128,32 @@ class GrpcWebBaseClientTests(unittest.TestCase):
     def test_non_positive_timeout_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "greater than zero"):
             self.make_client(timeout=0)
+
+    def test_account_without_can_manage_clients_defaults_to_false(self):
+        payload = json.loads(ACCOUNT_PAYLOAD)
+        del payload["canManageClients"]
+
+        account = Account.model_validate(payload)
+
+        self.assertFalse(account.canManageClients)
+
+    def test_service_line_accepts_null_names(self):
+        service_line = ServiceLine.model_validate(
+            {
+                "serviceLineNumber": "SL-1",
+                "nickname": None,
+                "displayName": None,
+                "serviceAddress": ServiceAddress.model_construct(),
+                "userTerminals": [],
+                "gateways": [],
+                "subscription": Subscription.model_construct(),
+                "isDepositCancelled": False,
+                "canPauseService": False,
+            }
+        )
+
+        self.assertIsNone(service_line.nickname)
+        self.assertIsNone(service_line.displayName)
 
 
 if __name__ == "__main__":
