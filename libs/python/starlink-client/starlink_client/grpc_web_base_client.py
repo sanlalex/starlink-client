@@ -40,7 +40,16 @@ class ResponseError(Exception):
 
 
 class GrpcWebBaseClient:
-    def __init__(self, initial_cookies: str, cookie_storage_path: str):
+    def __init__(
+        self,
+        initial_cookies: str,
+        cookie_storage_path: str,
+        *,
+        grpc_web_api_url: str = STARLINK_GRPC_WEB_API_URL,
+        auth_url: str = STARLINK_AUTH_URL,
+        web_origin: str = STARLINK_WEB_ORIGIN,
+        timeout: float = DEFAULT_TIMEOUT,
+    ):
         """
         Initialize the gRPC-Web client.
 
@@ -48,8 +57,13 @@ class GrpcWebBaseClient:
             initial_cookies (str): The initial cookies for authentication.
             cookie_storage_path (str): The path to store cookies on disk.
         """
-        self._url = STARLINK_GRPC_WEB_API_URL
-        self._auth_url = STARLINK_AUTH_URL
+        if timeout <= 0:
+            raise ValueError("timeout must be greater than zero")
+
+        self._url = grpc_web_api_url
+        self._auth_url = auth_url
+        self._web_origin = web_origin
+        self._request_timeout = timeout
         self._lock = threading.Lock()
         self._xsrf_token: Optional[str] = None
 
@@ -78,9 +92,23 @@ class GrpcWebBaseClient:
                 self._load_cookies(cookies_str)
         else:
             self._load_cookies(initial_cookies)
-        self._client = httpx.Client(http2=True, cookies=self._cookie_jar)
+        self._client = httpx.Client(
+            http2=True,
+            cookies=self._cookie_jar,
+            timeout=self._request_timeout,
+        )
         self._refresh_auth()
         self._save_cookies_to_file()
+
+    def close(self):
+        """Close the underlying HTTP client and release its connections."""
+        self._client.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
 
 
@@ -195,7 +223,7 @@ class GrpcWebBaseClient:
             "X-Grpc-Web": "1",
             "X-User-Agent": "okhttp/4.9.2",
             "Content-Type": "application/grpc-web+proto",
-            "Origin": STARLINK_WEB_ORIGIN,
+            "Origin": self._web_origin,
             "cookie": self._cookie,
         }
         # The API stopped issuing XSRF tokens, and the account site no longer
@@ -204,7 +232,7 @@ class GrpcWebBaseClient:
             headers["x-xsrf-token"] = self._xsrf_token
 
         response = self._client.post(self._url, content=body, headers=headers,
-                                     timeout=DEFAULT_TIMEOUT)
+                                     timeout=self._request_timeout)
         if response.status_code == 200:
             resp_bytes = response.content
             if len(resp_bytes) == 0:
@@ -282,12 +310,12 @@ class GrpcWebBaseClient:
                 "X-User-Agent": "okhttp/4.9.2",
                 "Accept": "application/json",
                 "Cookie": self._cookie,
-                # Es posible que sea necesario enviar también el token xsrf
-                "x-xsrf-token": self._xsrf_token,
             }
+            if self._xsrf_token:
+                headers["x-xsrf-token"] = self._xsrf_token
             try:
                 response = self._client.get(self._auth_url, headers=headers,
-                                            timeout=DEFAULT_TIMEOUT)
+                                            timeout=self._request_timeout)
             except httpx.RequestError as e:
                 raise AuthenticationError(
                     f"Error during authentication refresh request: {e}")
@@ -318,3 +346,4 @@ class GrpcWebBaseClient:
         # Actualizar la cadena de cookies a partir del cookie jar
         self._update_cookie_header()
         return True
+
