@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from spacex.api.device.device_pb2 import Request, Response
 from starlink_client.account import Account
-from starlink_client.dto import ServiceAddress, ServiceLine, Subscription
+from starlink_client.dto import ServiceAddress, ServiceLine
 from starlink_client.grpc_web_base_client import GrpcWebBaseClient
 
 
@@ -137,7 +137,7 @@ class GrpcWebBaseClientTests(unittest.TestCase):
 
         self.assertFalse(account.canManageClients)
 
-    def test_service_line_accepts_null_names(self):
+    def test_service_line_accepts_nullable_optional_fields(self):
         service_line = ServiceLine.model_validate(
             {
                 "serviceLineNumber": "SL-1",
@@ -146,7 +146,7 @@ class GrpcWebBaseClientTests(unittest.TestCase):
                 "serviceAddress": ServiceAddress.model_construct(),
                 "userTerminals": [],
                 "gateways": [],
-                "subscription": Subscription.model_construct(),
+                "subscription": None,
                 "isDepositCancelled": False,
                 "canPauseService": False,
             }
@@ -154,6 +154,7 @@ class GrpcWebBaseClientTests(unittest.TestCase):
 
         self.assertIsNone(service_line.nickname)
         self.assertIsNone(service_line.displayName)
+        self.assertIsNone(service_line.subscription)
 
 
 if __name__ == "__main__":

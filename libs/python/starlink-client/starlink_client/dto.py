@@ -97,7 +97,7 @@ class ServiceLine(BaseModel):
     serviceAddress: ServiceAddress
     userTerminals: List[UserTerminal]
     gateways: List[Any]
-    subscription: Subscription
+    subscription: Optional[Subscription] = None
     isDepositCancelled: bool
     aviationMetadata: Optional[Any] = None
     canPauseService: bool
