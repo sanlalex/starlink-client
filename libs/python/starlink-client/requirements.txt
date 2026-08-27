@@ -1,8 +1,8 @@
-grpcio
-grpcio-status
-proto-plus
-protobuf
-requests
-httpx
-pydantic
-httpx[http2]
+grpcio>=1.83.0,<2
+grpcio-status>=1.83.0,<2
+proto-plus>=1.26.1,<2
+protobuf>=7.35.1,<8
+requests>=2.32,<3
+httpx[http2]>=0.28,<1
+pydantic>=2.11,<3
+
