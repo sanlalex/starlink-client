@@ -53,6 +53,23 @@ To extract the cookie from the browser, you need to log in from any browser and 
 
 The cookie lasts for 15 days, but the library supports cookie refresh, which allows for longer use if the cookie is refreshed regularly. Simply use the library within 15 days, and it will save the refreshed cookie in a directory.
 
+The Python package uses the current account-site gRPC-Web endpoint by default.
+Deployments can override the endpoints and timeout without patching the client:
+
+```python
+client = GrpcWebClient(
+    initial_cookies,
+    "dir_cookies",
+    grpc_web_api_url="https://starlink.com/api/SpaceX.API.Device.Device/Handle",
+    auth_url="https://api.starlink.com/auth-rp/auth/user",
+    web_origin="https://starlink.com",
+    timeout=10,
+)
+```
+
+The generated Python messages require Protobuf 7.35.1 or newer. The package
+metadata enforces compatible Protobuf and gRPC versions during installation.
+
 Note that some calls can be made via Stream instead of gRPC unary calls.
 
 You can create the cookie json using this chrome extension:
@@ -209,3 +226,4 @@ The following languages are supported for client libraries:
 ### Legal
 
 This project is not affiliated with SpaceX or Starlink. It is an independent project created by a fan of the service.
+
